@@ -5,46 +5,38 @@ import { useState, useEffect } from 'react';
 import Form from "@/components/Form";
 import { Button, Input } from "@nextui-org/react";
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [input, setInput] = useState({ firstName: '', lastName: '', message: '', contact: '', email: '', phoneNumber: '' });
-  const [error, setError] = useState({ firstName: '', lastName: '', message: '', contact: '', email: '', phoneNumber: '' });
+  const [error, setError] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
-    setError({ firstName: '', lastName: '', message: '', contact: '', email: '', phoneNumber: '' });
+    setError('');
   }, [input]);
+
+  const handleSignOut = async () => {
+    await fetch(`${process.env.NEXT_PUBLIC_DOMAIN_URL}/api/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+    const redirectUrl = `${process.env.NEXT_PUBLIC_DOMAIN_URL}/login`;
+    router.push(redirectUrl);
+  }
 
   const handleClick = async () => {
 
-    let invalid = false;
-    if (!input.firstName) {
-      setError(prev => ({ ...prev, firstName: 'First Name Required' }));
-      invalid = true;
+    if (!input.firstName || !input.lastName || !input.message || !input.contact || !input.email || !input.phoneNumber) {
+      setError('All fields are required');
+      return;
     }
-    if (!input.lastName) {
-      setError(prev => ({ ...prev, lastName: 'Last Name Required' }));
-      invalid = true;
-    }
-    if (!input.message) {
-      setError(prev => ({ ...prev, message: 'Message Required' }));
-      invalid = true;
-    }
-    if (!input.contact) {
-      setError(prev => ({ ...prev, contact: 'Contact Required' }));
-      invalid = true;
-    }
-    if (!input.email) {
-      setError(prev => ({ ...prev, email: 'Email Required' }));
-      invalid = true;
-    }
-    if (!input.phoneNumber) {
-      setError(prev => ({ ...prev, phoneNumber: 'Phone Number Required' }));
-      invalid = true;
-    }
-    if (invalid) return;
 
     if (!(input.contact === 'Existing Client Calls' || input.contact === 'New Client Calls' || input.contact === 'General Calls')) {
-      setError(prev => ({ ...prev, contact: 'Invalid Contact' }));
+      setError('Invalid Contact Type');
       return;
     }
 
@@ -75,16 +67,22 @@ export default function Home() {
 
   const formElements = [
     <h1 className='mb-10 font-extralight text-4xl' >Create New Lead</h1>,
-    <Input className='m-2' label="First Name" placeholder="First Name" value={input.firstName} onChange={(e) => setInput({ ...input, firstName: e.target.value })} isInvalid={Boolean(error.firstName)} errorMessage={error.firstName}/>,
-    <Input className='m-2' label="Last Name" placeholder="Last Name" value={input.lastName} onChange={(e) => setInput({ ...input, lastName: e.target.value })} isInvalid={Boolean(error.lastName)} errorMessage={error.lastName}/>,
-    <Input className='m-2' label="Message" placeholder="Message" value={input.message} onChange={(e) => setInput({ ...input, message: e.target.value })} isInvalid={Boolean(error.message)} errorMessage={error.message}/>,
-    <Input className='m-2' label="Contact" placeholder="Contact" value={input.contact} onChange={(e) => setInput({ ...input, contact: e.target.value })} isInvalid={Boolean(error.contact)} errorMessage={error.contact} />,
-    <Input className='m-2' label="Email" placeholder="Email" value={input.email} onChange={(e) => setInput({ ...input, email: e.target.value })} isInvalid={Boolean(error.email)} errorMessage={error.email}/>,
-    <Input className='m-2' label="Phone Number" placeholder="Phone Number" value={input.phoneNumber} onChange={(e) => setInput({ ...input, phoneNumber: e.target.value })} isInvalid={Boolean(error.phoneNumber)} errorMessage={error.phoneNumber}/>,
+    <Input className='m-2' label="First Name" placeholder="First Name" value={input.firstName} onChange={(e) => setInput({ ...input, firstName: e.target.value })} />,
+    <Input className='m-2' label="Last Name" placeholder="Last Name" value={input.lastName} onChange={(e) => setInput({ ...input, lastName: e.target.value })} />,
+    <Input className='m-2' label="Message" placeholder="Message" value={input.message} onChange={(e) => setInput({ ...input, message: e.target.value })} />,
+    <Input className='m-2' label="Contact" placeholder="Contact" value={input.contact} onChange={(e) => setInput({ ...input, contact: e.target.value })} />,
+    <Input className='m-2' label="Email" placeholder="Email" value={input.email} onChange={(e) => setInput({ ...input, email: e.target.value })} />,
+    <Input className='m-2' label="Phone Number" placeholder="Phone Number" value={input.phoneNumber} onChange={(e) => setInput({ ...input, phoneNumber: e.target.value })} />,
+    <h2 className={`text-center mb-4 h-[20px] font-light text-red-500 text-sm ${error ? 'opacity-100' : 'opacity-1'}`}>{error}</h2>,
     <Button className='mt-1 bg-blue-600 text-white w-[125px]' size='lg' color='default' type='button' onClick={handleClick}>Click</Button>
   ];
 
   return (
-    <Form elements={formElements} />
+    <div>
+      <div className='flex flex-row justify-end'>
+        <Button className='m-2 bg-red-600 text-white' onClick={handleSignOut} >Sign Out</Button>
+      </div>
+      <Form elements={formElements} />
+    </div>
   );
 }
